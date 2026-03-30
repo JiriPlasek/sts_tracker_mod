@@ -4,28 +4,34 @@ A Slay the Spire 2 mod that provides real-time card pick recommendations and aut
 
 ## Features
 
-- **In-game card ratings** — See scores and top factors for each card on reward screens
+- **In-game card ratings** — See scores below each card on reward screens, event card choices, and shops. Hover for a detailed breakdown of synergy, archetype fit, and more.
 - **Auto-upload runs** — Completed runs are automatically uploaded to your STS Tracker account
 - **Active run sync** — Your current run state syncs to the browser companion page in real-time
+
+## Recommended Mods
+
+- [UnifiedSavePath](https://www.nexusmods.com/slaythespire2/mods/6) — Consolidates save files across Steam profiles. Recommended if you play on multiple profiles.
 
 ## Installation
 
 ### From Nexus Mods
+
 1. Download the mod from [Nexus Mods](https://www.nexusmods.com/slaythespire2)
-2. Extract into your STS2 mods directory (see Manual Install below)
+2. Extract the `StsCompanion` folder into your STS2 mods directory:
+   `Steam/steamapps/common/Slay the Spire 2/mods/`
 
 ### Manual Install
+
 1. Download the latest release
-2. Navigate to your STS2 install directory (e.g., `Steam/steamapps/common/Slay the Spire 2/`)
-3. Create a `mods` folder if it doesn't exist
-4. Create a `StsCompanion` folder inside `mods/`
-5. Copy `StsCompanion.dll`, `mod_manifest.json`, and `config.json` into that folder
+2. Navigate to your STS2 mods directory (e.g., `Steam/steamapps/common/Slay the Spire 2/mods`)
+3. Create a `StsCompanion` folder inside `mods/`
+4. Copy `StsCompanion.dll`, `mod_manifest.json`, and `sts_companion_config.cfg` into that folder
 
 ## Setup
 
 1. Go to [STS Tracker](https://ststracker.app) and log in with Steam
 2. Go to Settings and generate an API token
-3. Open `config.json` in the mod folder and paste your token:
+3. Open `sts_companion_config.cfg` in the mod folder and paste your token:
 
 ```json
 {
@@ -41,21 +47,37 @@ A Slay the Spire 2 mod that provides real-time card pick recommendations and aut
 
 ## Configuration
 
-| Setting | Default | Description |
-|---------|---------|-------------|
-| `apiToken` | `""` | Your STS Tracker API token (required) |
-| `apiUrl` | `"https://ststracker.app"` | API server URL |
-| `overlayEnabled` | `true` | Show score overlay on card reward screens |
-| `autoUploadRuns` | `true` | Auto-upload completed runs |
-| `syncActiveRun` | `true` | Sync active run to browser companion page |
+| Setting          | Default                    | Description                                          |
+| ---------------- | -------------------------- | ---------------------------------------------------- |
+| `apiToken`       | `""`                       | Your STS Tracker API token (required)                |
+| `apiUrl`         | `"https://ststracker.app"` | API server URL                                       |
+| `overlayEnabled` | `true`                     | Show score overlay on card selections                |
+| `autoUploadRuns` | `true`                     | Auto-upload completed runs                           |
+| `syncActiveRun`  | `true`                     | Sync active run to browser companion page            |
+
+## Card Rating Screens
+
+The overlay shows scores on:
+- **Post-combat card rewards** — The standard 3-card pick after a fight
+- **Event card choices** — "Choose N cards" events in '?' rooms
+- **Shop cards** — Character and colorless cards at the merchant
+
+Scores are color-coded: green (strong pick), yellow (average), red (weak). The best card gets a gold border and star.
 
 ## Important
 
-If you're using [rusty-sts](https://github.com/JiriPlasek/rusty_sts) for auto-sync, you should disable it when using this mod to avoid duplicate uploads. Use one or the other, not both.
+If you're using [rusty-sts](https://github.com/JiriPlasek/rusty_sts) for auto-sync, disable it when using this mod to avoid duplicate uploads. Use one or the other, not both.
 
 ## Building from Source
 
-1. Install [.NET 9.0 SDK](https://dotnet.microsoft.com/download)
-2. Set `STS2GameDir` environment variable to your STS2 install path, or edit `StsCompanion.csproj`
-3. Run `dotnet build`
-4. Copy output DLL + `mod_manifest.json` + `config.json` to your mods directory
+Requires .NET 9.0 SDK and Slay the Spire 2 installed.
+
+```bash
+dotnet build -c Release
+```
+
+The `STS2GameDir` property defaults to the standard Steam install path. Override it if your game is installed elsewhere:
+
+```bash
+dotnet build -c Release -p:STS2GameDir="D:\Games\Slay the Spire 2"
+```

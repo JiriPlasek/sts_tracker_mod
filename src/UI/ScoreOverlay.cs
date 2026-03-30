@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using Godot;
+using MegaCrit.Sts2.Core.Entities.Merchant;
+using MegaCrit.Sts2.Core.Nodes.Cards;
 using MegaCrit.Sts2.Core.Nodes.Cards.Holders;
 using MegaCrit.Sts2.Core.Nodes.Screens.Shops;
 using StsCompanion.Models;
@@ -55,19 +57,35 @@ public sealed class ScoreOverlay
         {
             var holders = containers.SelectMany(CollectCardHolders).ToList();
 
-            // Match holders to candidates by position order (candidateIds matches holder order)
-            for (var i = 0; i < holders.Count && i < candidateIds.Length; i++)
+            // Match each holder to its recommendation by card ID (handles reordering by grid/shop)
+            foreach (var holder in holders)
             {
-                if (!recByCard.TryGetValue(candidateIds[i], out var rec)) continue;
+                var cardId = GetCardId(holder);
+                if (cardId == null || !recByCard.TryGetValue(cardId, out var rec)) continue;
 
                 var isBest = rec.Total >= bestScore - 0.01;
                 var scoreColor = GetScoreColor(rec.Total);
                 var scoreText = rec.HasData ? $"{rec.Total:F1}" : "?";
 
                 var badge = CreateScoreBadge(scoreText, scoreColor, isBest, rec);
-                AttachToCard(holders[i], badge);
+                AttachToCard(holder, badge);
             }
         }).CallDeferred();
+    }
+
+    /// <summary>
+    /// Extracts the game card ID (e.g., "CARD.INFLAME") from a card holder node.
+    /// </summary>
+    private static string? GetCardId(Control holder)
+    {
+        if (holder is NGridCardHolder gridHolder)
+            return "CARD." + gridHolder.CardModel.Id.Entry;
+        if (holder is NMerchantCard merchantCard)
+        {
+            var entry = merchantCard.Entry as MerchantCardEntry;
+            return entry?.CreationResult?.Card != null ? "CARD." + entry.CreationResult.Card.Id.Entry : null;
+        }
+        return null;
     }
 
     public void Hide()
@@ -103,6 +121,10 @@ public sealed class ScoreOverlay
         cardRow = screen.GetNodeOrNull<Control>("CardRow");
         if (cardRow != null) return new List<Control> { cardRow };
 
+        // Grid-based selection (NSimpleCardSelectScreen): %CardGrid
+        var cardGrid = screen.GetNodeOrNull<Control>("%CardGrid");
+        if (cardGrid != null) return new List<Control> { cardGrid };
+
         // Shop: %CharacterCards and %ColorlessCards
         var containers = new List<Control>();
         var charCards = screen.GetNodeOrNull<Control>("%CharacterCards");
@@ -115,10 +137,28 @@ public sealed class ScoreOverlay
     }
 
     /// <summary>
-    /// Collects card slot nodes — NGridCardHolder (rewards, events) or NMerchantCard (shop).
+    /// Collects card slot nodes — NGridCardHolder (rewards, events, grid) or NMerchantCard (shop).
     /// </summary>
     private static List<Control> CollectCardHolders(Control container)
     {
+        // NCardGrid: holders are nested in row containers
+        if (container is NCardGrid cardGrid)
+        {
+            var gridHolders = new List<Control>();
+            foreach (var child in cardGrid.GetChildren())
+            {
+                if (child is NGridCardHolder h)
+                {
+                    gridHolders.Add(h);
+                }
+                else if (child is Control row)
+                {
+                    gridHolders.AddRange(row.GetChildren().OfType<NGridCardHolder>().Cast<Control>());
+                }
+            }
+            return gridHolders;
+        }
+
         // Try NGridCardHolder first (card rewards, events)
         var holders = container.GetChildren().OfType<NGridCardHolder>().Cast<Control>().ToList();
         if (holders.Count > 0) return holders;

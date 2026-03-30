@@ -6,6 +6,7 @@ using Godot;
 using HarmonyLib;
 using MegaCrit.Sts2.Core.Context;
 using MegaCrit.Sts2.Core.Entities.Cards;
+using MegaCrit.Sts2.Core.CardSelection;
 using MegaCrit.Sts2.Core.Entities.CardRewardAlternatives;
 using MegaCrit.Sts2.Core.Entities.Merchant;
 using MegaCrit.Sts2.Core.Models;
@@ -206,5 +207,58 @@ public static class ShopCardPatch
                 }
             }
         }
+    }
+}
+
+// ── Grid-based card selection (e.g., "choose 2 out of 5" in '?' rooms) ──
+
+[HarmonyPatch(typeof(NSimpleCardSelectScreen), nameof(NSimpleCardSelectScreen.AfterOverlayOpened))]
+public static class SimpleCardSelectPatch
+{
+    internal static bool _scored;
+
+    [HarmonyPostfix]
+    public static void Postfix(NSimpleCardSelectScreen __instance)
+    {
+        try
+        {
+            if (Plugin.CurrentConfig?.OverlayEnabled != true) return;
+            if (_scored) return; // AfterOverlayShown can fire multiple times
+
+            // Access _cards from the base class via Harmony traverse
+            var cards = Traverse.Create(__instance).Field<IReadOnlyList<CardModel>>("_cards").Value;
+            if (cards == null || cards.Count == 0) return;
+
+            _scored = true;
+
+            var ids = cards.Select(c => "CARD." + c.Id.Entry).ToArray();
+            var upgrades = cards.Select(c => c.IsUpgraded ? 1 : 0).ToArray();
+
+            Plugin.Log($"Grid card selection opened! Cards={string.Join(", ", ids)}");
+
+            // Delay to let the grid finish its async init + animate-in
+            _ = DelayedRequestScores(__instance, ids, upgrades);
+        }
+        catch (Exception ex)
+        {
+            Plugin.Log($"SimpleCardSelectPatch error: {ex.Message}");
+        }
+    }
+
+    private static async Task DelayedRequestScores(Control screen, string[] ids, int[] upgrades)
+    {
+        await screen.ToSignal(screen.GetTree().CreateTimer(0.5), SceneTreeTimer.SignalName.Timeout);
+        CardScoreHelper.RequestScores(screen, ids, upgrades);
+    }
+}
+
+[HarmonyPatch(typeof(NCardGridSelectionScreen), nameof(NCardGridSelectionScreen._ExitTree))]
+public static class SimpleCardSelectClosePatch
+{
+    [HarmonyPostfix]
+    public static void Postfix()
+    {
+        SimpleCardSelectPatch._scored = false;
+        ScoreOverlay.Instance?.Hide();
     }
 }
