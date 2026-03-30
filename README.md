@@ -14,7 +14,7 @@ A Slay the Spire 2 mod that provides real-time card pick recommendations and aut
 
 ### Manual Install
 
-1. Download the mod from [Nexus Mods](https://www.nexusmods.com/slaythespire2)
+1. Download the mod from [Nexus Mods](https://www.nexusmods.com/slaythespire2/mods/340)
 2. Navigate to your STS2 mods directory (e.g., `Steam/steamapps/common/Slay the Spire 2/mods`)
 3. Copy `StsCompanion` folder inside `mods/`
 
