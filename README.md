@@ -12,20 +12,11 @@ A Slay the Spire 2 mod that provides real-time card pick recommendations and aut
 
 - [UnifiedSavePath](https://www.nexusmods.com/slaythespire2/mods/6) — Consolidates save files across Steam profiles. Recommended if you play on multiple profiles.
 
-## Installation
-
-### From Nexus Mods
-
-1. Download the mod from [Nexus Mods](https://www.nexusmods.com/slaythespire2)
-2. Extract the `StsCompanion` folder into your STS2 mods directory:
-   `Steam/steamapps/common/Slay the Spire 2/mods/`
-
 ### Manual Install
 
-1. Download the latest release
+1. Download the mod from [Nexus Mods](https://www.nexusmods.com/slaythespire2)
 2. Navigate to your STS2 mods directory (e.g., `Steam/steamapps/common/Slay the Spire 2/mods`)
-3. Create a `StsCompanion` folder inside `mods/`
-4. Copy `StsCompanion.dll`, `mod_manifest.json`, and `sts_companion_config.cfg` into that folder
+3. Copy `StsCompanion` folder inside `mods/`
 
 ## Setup
 
@@ -47,17 +38,18 @@ A Slay the Spire 2 mod that provides real-time card pick recommendations and aut
 
 ## Configuration
 
-| Setting          | Default                    | Description                                          |
-| ---------------- | -------------------------- | ---------------------------------------------------- |
-| `apiToken`       | `""`                       | Your STS Tracker API token (required)                |
-| `apiUrl`         | `"https://ststracker.app"` | API server URL                                       |
-| `overlayEnabled` | `true`                     | Show score overlay on card selections                |
-| `autoUploadRuns` | `true`                     | Auto-upload completed runs                           |
-| `syncActiveRun`  | `true`                     | Sync active run to browser companion page            |
+| Setting          | Default                    | Description                               |
+| ---------------- | -------------------------- | ----------------------------------------- |
+| `apiToken`       | `""`                       | Your STS Tracker API token (required)     |
+| `apiUrl`         | `"https://ststracker.app"` | API server URL                            |
+| `overlayEnabled` | `true`                     | Show score overlay on card selections     |
+| `autoUploadRuns` | `true`                     | Auto-upload completed runs                |
+| `syncActiveRun`  | `true`                     | Sync active run to browser companion page |
 
 ## Card Rating Screens
 
 The overlay shows scores on:
+
 - **Post-combat card rewards** — The standard 3-card pick after a fight
 - **Event card choices** — "Choose N cards" events in '?' rooms
 - **Shop cards** — Character and colorless cards at the merchant
@@ -67,17 +59,3 @@ Scores are color-coded: green (strong pick), yellow (average), red (weak). The b
 ## Important
 
 If you're using [rusty-sts](https://github.com/JiriPlasek/rusty_sts) for auto-sync, disable it when using this mod to avoid duplicate uploads. Use one or the other, not both.
-
-## Building from Source
-
-Requires .NET 9.0 SDK and Slay the Spire 2 installed.
-
-```bash
-dotnet build -c Release
-```
-
-The `STS2GameDir` property defaults to the standard Steam install path. Override it if your game is installed elsewhere:
-
-```bash
-dotnet build -c Release -p:STS2GameDir="D:\Games\Slay the Spire 2"
-```
