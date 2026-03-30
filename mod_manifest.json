@@ -1,0 +1,11 @@
+{
+  "id": "StsCompanion",
+  "name": "STS Tracker Companion",
+  "author": "JiriPlasek",
+  "description": "Real-time card pick recommendations and automatic run upload to STS Tracker",
+  "version": "1.0.0",
+  "has_pck": false,
+  "has_dll": true,
+  "affects_gameplay": false,
+  "dependencies": []
+}

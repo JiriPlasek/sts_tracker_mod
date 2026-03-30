@@ -1,0 +1,33 @@
+## Build output
+bin/
+obj/
+
+## NuGet
+*.nupkg
+*.snupkg
+project.assets.json
+*.nuget.props
+*.nuget.targets
+
+## IDE
+.vs/
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.csproj.user
+
+## Rider
+.idea/
+*.sln.iml
+
+## OS
+.DS_Store
+Thumbs.db
+
+## Tools (inspector utility, not part of the mod)
+tools/
+
+## Claude
+.claude/
