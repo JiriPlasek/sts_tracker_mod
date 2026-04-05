@@ -110,6 +110,36 @@ public static class HttpService
         }
     }
 
+    public static async Task<AncientResponse?> GetAncientScores(AncientRequest request)
+    {
+        try
+        {
+            var json = JsonSerializer.Serialize(request);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            var response = await _client!.PostAsync("/api/companion/ancient", content);
+
+            if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                HandleAuthError();
+                return null;
+            }
+
+            response.EnsureSuccessStatusCode();
+            var body = await response.Content.ReadAsStringAsync();
+            return JsonSerializer.Deserialize<AncientResponse>(body);
+        }
+        catch (TaskCanceledException)
+        {
+            Plugin.Log("Ancient scores request timed out.");
+            return null;
+        }
+        catch (Exception ex)
+        {
+            Plugin.Log($"Ancient scores request failed: {ex.Message}");
+            return null;
+        }
+    }
+
     private static void HandleAuthError()
     {
         if (_authWarningShown) return;
