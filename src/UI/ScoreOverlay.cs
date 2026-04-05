@@ -274,10 +274,11 @@ public sealed class ScoreOverlay
             vbox.AddChild(noteLabel);
         }
 
-        var parent = anchor.GetParent();
-        if (parent != null)
+        // Add tooltip to the card holder (anchor's parent) so it stays with the card
+        var cardHolder = anchor.GetParent();
+        if (cardHolder != null)
         {
-            parent.AddChild(_tooltip);
+            cardHolder.AddChild(_tooltip);
             _tooltip.Position = anchor.Position + new Vector2(-20, -170);
             _nodes.Add(_tooltip);
         }
@@ -317,17 +318,16 @@ public sealed class ScoreOverlay
 
     private void AttachToCard(Control holder, PanelContainer badge)
     {
-        var parent = holder.GetParent();
-        if (parent == null) return;
-
-        parent.AddChild(badge);
+        // Add badge as child of the card holder so it moves/z-orders with the card
+        // and doesn't get orphaned when the game rearranges siblings on hover
+        holder.AddChild(badge);
         _nodes.Add(badge);
 
-        // Different offset for shop cards (smaller, have price tag) vs reward cards (larger)
+        // Position relative to the holder (badge is a child, not sibling)
         if (holder is NMerchantCard)
-            badge.Position = holder.Position + new Vector2(40, 140);
+            badge.Position = new Vector2(80, 220);
         else
-            badge.Position = holder.Position + new Vector2(-40, 220);
+            badge.Position = new Vector2(-40, 220);
     }
 
     private static string FormatCardId(string id)
