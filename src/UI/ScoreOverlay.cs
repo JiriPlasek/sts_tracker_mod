@@ -14,6 +14,7 @@ public sealed class ScoreOverlay
     public static ScoreOverlay? Instance { get; private set; }
 
     private readonly List<Control> _nodes = new();
+    private readonly List<Control> _shopItemNodes = new();
     private PanelContainer? _tooltip;
 
     public static void Create()
@@ -100,6 +101,19 @@ public sealed class ScoreOverlay
             }
         }
         _nodes.Clear();
+    }
+
+    public void HideShopItems()
+    {
+        foreach (var node in _shopItemNodes)
+        {
+            if (GodotObject.IsInstanceValid(node))
+            {
+                node.GetParent()?.RemoveChild(node);
+                node.QueueFree();
+            }
+        }
+        _shopItemNodes.Clear();
     }
 
     /// <summary>
@@ -328,6 +342,33 @@ public sealed class ScoreOverlay
             badge.Position = new Vector2(80, 220);
         else
             badge.Position = new Vector2(-40, 220);
+    }
+
+    public PanelContainer CreateShopBadge(string text, Color color)
+    {
+        var panel = new PanelContainer();
+        panel.MouseFilter = Control.MouseFilterEnum.Ignore;
+
+        var bg = new StyleBoxFlat();
+        bg.BgColor = new Color(0.03f, 0.03f, 0.08f, 0.85f);
+        bg.BorderColor = new Color(0.4f, 0.4f, 0.5f, 0.5f);
+        bg.SetBorderWidthAll(1);
+        bg.ContentMarginLeft = 6;
+        bg.ContentMarginRight = 6;
+        bg.ContentMarginTop = 2;
+        bg.ContentMarginBottom = 2;
+        bg.SetCornerRadiusAll(3);
+        panel.AddThemeStyleboxOverride("panel", bg);
+
+        var label = new Label();
+        label.Text = text;
+        label.AddThemeColorOverride("font_color", color);
+        label.AddThemeFontSizeOverride("font_size", 16);
+        label.HorizontalAlignment = HorizontalAlignment.Center;
+        panel.AddChild(label);
+
+        _shopItemNodes.Add(panel);
+        return panel;
     }
 
     private static string FormatCardId(string id)

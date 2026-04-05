@@ -183,10 +183,127 @@ public static class ShopCardPatch
 
             Plugin.Log($"Shop opened with {ids.Count} cards: {string.Join(", ", ids)}");
             CardScoreHelper.RequestScores(__instance, ids.ToArray(), upgrades.ToArray());
+
+            // Also score relics and potions
+            _ = RequestShopRelicPotionScores(__instance);
         }
         catch (Exception ex)
         {
             Plugin.Log($"ShopCardPatch error: {ex.Message}");
+        }
+    }
+
+    private static async Task RequestShopRelicPotionScores(NMerchantInventory shop)
+    {
+        try
+        {
+            var runState = RunManager.Instance.DebugOnlyGetState();
+            if (runState == null) return;
+            var player = LocalContext.GetMe(runState);
+            if (player == null) return;
+            var characterId = "CHARACTER." + player.Character.Id.Entry;
+
+            var relicContainer = shop.GetNodeOrNull<Control>("%Relics");
+            var potionContainer = shop.GetNodeOrNull<Control>("%Potions");
+
+            var relicIds = new List<string>();
+            var relicNodes = new List<Control>();
+            if (relicContainer != null)
+            {
+                foreach (var child in relicContainer.GetChildren())
+                {
+                    if (child is NMerchantRelic merchantRelic)
+                    {
+                        var entry = merchantRelic.Entry as MerchantRelicEntry;
+                        if (entry?.Model != null)
+                        {
+                            relicIds.Add("RELIC." + entry.Model.Id.Entry);
+                            relicNodes.Add(merchantRelic);
+                        }
+                    }
+                }
+            }
+
+            var potionIds = new List<string>();
+            var potionNodes = new List<Control>();
+            if (potionContainer != null)
+            {
+                foreach (var child in potionContainer.GetChildren())
+                {
+                    if (child is NMerchantPotion merchantPotion)
+                    {
+                        var entry = merchantPotion.Entry as MerchantPotionEntry;
+                        if (entry?.Model != null)
+                        {
+                            potionIds.Add("POTION." + entry.Model.Id.Entry);
+                            potionNodes.Add(merchantPotion);
+                        }
+                    }
+                }
+            }
+
+            if (relicIds.Count == 0 && potionIds.Count == 0) return;
+
+            Plugin.Log($"Shop relics: {string.Join(", ", relicIds)} | potions: {string.Join(", ", potionIds)}");
+
+            var request = new ShopScoreRequest
+            {
+                Character = characterId,
+                RelicIds = relicIds.Count > 0 ? relicIds.ToArray() : null,
+                PotionIds = potionIds.Count > 0 ? potionIds.ToArray() : null
+            };
+
+            var response = await HttpService.GetShopScores(request);
+            if (response == null) return;
+
+            Callable.From(() =>
+            {
+                if (!GodotObject.IsInstanceValid(shop)) return;
+
+                // Attach relic scores
+                var relicLookup = new Dictionary<string, ShopRelicScore>();
+                foreach (var r in response.Relics) relicLookup[r.RelicId] = r;
+
+                for (var i = 0; i < relicNodes.Count; i++)
+                {
+                    if (!GodotObject.IsInstanceValid(relicNodes[i])) continue;
+                    if (!relicLookup.TryGetValue(relicIds[i], out var score)) continue;
+
+                    var text = score.HasData ? $"{(score.WinRateDelta >= 0 ? "+" : "")}{score.WinRateDelta:F1}%" : "?";
+                    var color = !score.HasData ? new Color(0.5f, 0.5f, 0.55f)
+                        : score.WinRateDelta >= 3 ? new Color(0.3f, 0.85f, 0.4f)
+                        : score.WinRateDelta >= 0 ? new Color(0.95f, 0.85f, 0.3f)
+                        : new Color(0.9f, 0.3f, 0.3f);
+
+                    var badge = ScoreOverlay.Instance!.CreateShopBadge(text, color);
+                    relicNodes[i].AddChild(badge);
+                    badge.Position = new Vector2(20, 100);
+                }
+
+                // Attach potion scores
+                var potionLookup = new Dictionary<string, ShopPotionScore>();
+                foreach (var p in response.Potions) potionLookup[p.PotionId] = p;
+
+                for (var i = 0; i < potionNodes.Count; i++)
+                {
+                    if (!GodotObject.IsInstanceValid(potionNodes[i])) continue;
+                    if (!potionLookup.TryGetValue(potionIds[i], out var score)) continue;
+
+                    var text = score.HasData ? $"{score.PickRate:F0}%" : "?";
+                    var color = !score.HasData ? new Color(0.5f, 0.5f, 0.55f)
+                        : score.PickRate >= 50 ? new Color(0.3f, 0.85f, 0.4f)
+                        : score.PickRate >= 25 ? new Color(0.95f, 0.85f, 0.3f)
+                        : new Color(0.9f, 0.3f, 0.3f);
+
+                    var badge = ScoreOverlay.Instance!.CreateShopBadge(text, color);
+                    potionNodes[i].AddChild(badge);
+                    badge.Position = new Vector2(10, 90);
+                }
+            }).CallDeferred();
+        }
+        catch (Exception ex)
+        {
+            Plugin.Log($"Shop relic/potion scoring error: {ex.Message}");
         }
     }
 

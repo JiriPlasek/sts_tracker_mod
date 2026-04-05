@@ -110,6 +110,36 @@ public static class HttpService
         }
     }
 
+    public static async Task<ShopScoreResponse?> GetShopScores(ShopScoreRequest request)
+    {
+        try
+        {
+            var json = JsonSerializer.Serialize(request);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            var response = await _client!.PostAsync("/api/companion/shop", content);
+
+            if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                HandleAuthError();
+                return null;
+            }
+
+            response.EnsureSuccessStatusCode();
+            var body = await response.Content.ReadAsStringAsync();
+            return JsonSerializer.Deserialize<ShopScoreResponse>(body);
+        }
+        catch (TaskCanceledException)
+        {
+            Plugin.Log("Shop scores request timed out.");
+            return null;
+        }
+        catch (Exception ex)
+        {
+            Plugin.Log($"Shop scores request failed: {ex.Message}");
+            return null;
+        }
+    }
+
     public static async Task<AncientResponse?> GetAncientScores(AncientRequest request)
     {
         try
