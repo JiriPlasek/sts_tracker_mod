@@ -33,9 +33,20 @@ public static class Plugin
         HttpService.Init(config);
 
         _harmony = new Harmony("com.ststracker.companion");
-        _harmony.PatchAll(Assembly.GetExecutingAssembly());
+        try
+        {
+            _harmony.PatchAll(Assembly.GetExecutingAssembly());
+        }
+        catch (System.Exception ex)
+        {
+            Log($"Harmony PatchAll failed: {ex.Message}");
+            Log("Some features may not work. Continuing with what loaded.");
+        }
 
         ScoreOverlay.Create();
+
+        // Register with ModConfig (if installed) for in-game settings UI
+        ModConfigBridge.DeferredRegister();
 
         Log("STS Tracker Companion loaded successfully.");
     }

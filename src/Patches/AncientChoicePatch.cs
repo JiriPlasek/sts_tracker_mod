@@ -128,6 +128,7 @@ public static class AncientChoicePatch
 
     private static PanelContainer CreateAncientBadge(string scoreText, Color scoreColor, bool isBest, AncientRecommendation rec)
     {
+        var s = ModConfigBridge.GetValue("badgeScale", Plugin.CurrentConfig?.BadgeScale ?? 1.0f);
         var panel = new PanelContainer();
         panel.MouseFilter = Control.MouseFilterEnum.Ignore;
 
@@ -135,22 +136,22 @@ public static class AncientChoicePatch
         bg.BgColor = new Color(0.03f, 0.03f, 0.08f, 0.85f);
         bg.BorderColor = isBest ? new Color(0.9f, 0.75f, 0.35f) : new Color(0.4f, 0.4f, 0.5f, 0.5f);
         bg.SetBorderWidthAll(isBest ? 2 : 1);
-        bg.ContentMarginLeft = 8;
-        bg.ContentMarginRight = 8;
-        bg.ContentMarginTop = 3;
-        bg.ContentMarginBottom = 3;
+        bg.ContentMarginLeft = ScaleMargin(8, s);
+        bg.ContentMarginRight = ScaleMargin(8, s);
+        bg.ContentMarginTop = ScaleMargin(3, s);
+        bg.ContentMarginBottom = ScaleMargin(3, s);
         bg.SetCornerRadiusAll(4);
         panel.AddThemeStyleboxOverride("panel", bg);
 
         var hbox = new HBoxContainer();
-        hbox.AddThemeConstantOverride("separation", 6);
+        hbox.AddThemeConstantOverride("separation", ScaleMargin(6, s));
         panel.AddChild(hbox);
 
         var bestMark = isBest ? " \u2605" : "";
         var scoreLabel = new Label();
         scoreLabel.Text = $"WR: {scoreText}{bestMark}";
         scoreLabel.AddThemeColorOverride("font_color", scoreColor);
-        scoreLabel.AddThemeFontSizeOverride("font_size", 14);
+        scoreLabel.AddThemeFontSizeOverride("font_size", ScaleFont(14, s));
         hbox.AddChild(scoreLabel);
 
         if (rec.HasData)
@@ -158,12 +159,15 @@ public static class AncientChoicePatch
             var pickLabel = new Label();
             pickLabel.Text = $"Pick: {rec.PickRate:F0}%";
             pickLabel.AddThemeColorOverride("font_color", new Color(0.6f, 0.6f, 0.65f));
-            pickLabel.AddThemeFontSizeOverride("font_size", 11);
+            pickLabel.AddThemeFontSizeOverride("font_size", ScaleFont(11, s));
             hbox.AddChild(pickLabel);
         }
 
         return panel;
     }
+
+    private static int ScaleFont(int baseSize, float scale) => Math.Max(8, (int)(baseSize * scale));
+    private static int ScaleMargin(int baseMargin, float scale) => Math.Max(1, (int)(baseMargin * scale));
 
     private static Color GetWinRateColor(double winRate, bool hasData)
     {

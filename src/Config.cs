@@ -21,6 +21,12 @@ public sealed class Config
     [JsonPropertyName("syncActiveRun")]
     public bool SyncActiveRun { get; set; } = true;
 
+    [JsonPropertyName("badgeScale")]
+    public float BadgeScale { get; set; } = 1.0f;
+
+    [JsonPropertyName("tooltipScale")]
+    public float TooltipScale { get; set; } = 1.0f;
+
     public static Config? Load()
     {
         var assemblyDir = Path.GetDirectoryName(typeof(Config).Assembly.Location);

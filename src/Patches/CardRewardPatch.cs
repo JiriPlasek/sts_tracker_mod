@@ -11,6 +11,7 @@ using MegaCrit.Sts2.Core.Entities.CardRewardAlternatives;
 using MegaCrit.Sts2.Core.Entities.Merchant;
 using MegaCrit.Sts2.Core.Models;
 using MegaCrit.Sts2.Core.Nodes.Screens.CardSelection;
+using MegaCrit.Sts2.Core.Nodes.Screens.ScreenContext;
 using MegaCrit.Sts2.Core.Nodes.Screens.Shops;
 using MegaCrit.Sts2.Core.Runs;
 using StsCompanion.Models;
@@ -165,31 +166,64 @@ public static class ShopCardPatch
     [HarmonyPostfix]
     public static void Postfix(NMerchantInventory __instance)
     {
+        ShopScoreHelper.ScoreShop(__instance);
+    }
+}
+
+// Re-score shop when returning from a sub-screen (card removal, relic card pick, etc.)
+[HarmonyPatch(typeof(NMerchantInventory), "OnActiveScreenUpdated")]
+public static class ShopRefocusPatch
+{
+    [HarmonyPostfix]
+    public static void Postfix(NMerchantInventory __instance)
+    {
+        try
+        {
+            // Only re-score if the shop is the active screen again
+            var isCurrent = MegaCrit.Sts2.Core.Nodes.Screens.ScreenContext.ActiveScreenContext.Instance.IsCurrent(__instance);
+            if (!isCurrent) return;
+
+            Plugin.Log("Shop regained focus — re-scoring");
+            ShopScoreHelper.ScoreShop(__instance);
+        }
+        catch (Exception ex)
+        {
+            Plugin.Log($"ShopRefocusPatch error: {ex.Message}");
+        }
+    }
+}
+
+public static class ShopScoreHelper
+{
+    public static void ScoreShop(NMerchantInventory shop)
+    {
         try
         {
             if (Plugin.CurrentConfig?.OverlayEnabled != true) return;
 
+            // Clear any previous shop badges
+            ScoreOverlay.Instance?.Hide();
+            ScoreOverlay.Instance?.HideShopItems();
+
             var ids = new List<string>();
             var upgrades = new List<int>();
 
-            // NMerchantCard slots are in %CharacterCards and %ColorlessCards
-            var charCards = __instance.GetNodeOrNull<Control>("%CharacterCards");
-            var colorlessCards = __instance.GetNodeOrNull<Control>("%ColorlessCards");
+            var charCards = shop.GetNodeOrNull<Control>("%CharacterCards");
+            var colorlessCards = shop.GetNodeOrNull<Control>("%ColorlessCards");
 
             CollectMerchantCards(charCards, ids, upgrades);
             CollectMerchantCards(colorlessCards, ids, upgrades);
 
             if (ids.Count == 0) return;
 
-            Plugin.Log($"Shop opened with {ids.Count} cards: {string.Join(", ", ids)}");
-            CardScoreHelper.RequestScores(__instance, ids.ToArray(), upgrades.ToArray());
+            Plugin.Log($"Shop scoring {ids.Count} cards: {string.Join(", ", ids)}");
+            CardScoreHelper.RequestScores(shop, ids.ToArray(), upgrades.ToArray());
 
-            // Also score relics and potions
-            _ = RequestShopRelicPotionScores(__instance);
+            _ = RequestShopRelicPotionScores(shop);
         }
         catch (Exception ex)
         {
-            Plugin.Log($"ShopCardPatch error: {ex.Message}");
+            Plugin.Log($"ShopScoreHelper error: {ex.Message}");
         }
     }
 

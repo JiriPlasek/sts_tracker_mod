@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Godot;
@@ -16,6 +17,15 @@ public sealed class ScoreOverlay
     private readonly List<Control> _nodes = new();
     private readonly List<Control> _shopItemNodes = new();
     private PanelContainer? _tooltip;
+
+    // ─── Scale helpers ──────────────────────────────────────────
+
+    private static float BadgeScale => ModConfigBridge.GetValue("badgeScale", Plugin.CurrentConfig?.BadgeScale ?? 1.0f);
+    private static float TooltipScale => ModConfigBridge.GetValue("tooltipScale", Plugin.CurrentConfig?.TooltipScale ?? 1.0f);
+
+    private static int ScaledFont(int baseSize, float scale) => Math.Max(8, (int)(baseSize * scale));
+    private static int ScaledMargin(int baseMargin, float scale) => Math.Max(1, (int)(baseMargin * scale));
+    private static Vector2 ScaledVec(Vector2 baseVec, float scale) => baseVec * scale;
 
     public static void Create()
     {
@@ -205,6 +215,7 @@ public sealed class ScoreOverlay
 
     private PanelContainer CreateScoreBadge(string scoreText, Color scoreColor, bool isBest, Recommendation? rec)
     {
+        var s = BadgeScale;
         var panel = new PanelContainer();
         panel.MouseFilter = Control.MouseFilterEnum.Stop;
 
@@ -212,10 +223,10 @@ public sealed class ScoreOverlay
         bg.BgColor = new Color(0.03f, 0.03f, 0.08f, 0.9f);
         bg.BorderColor = isBest ? new Color(0.9f, 0.75f, 0.35f) : new Color(0.4f, 0.4f, 0.5f, 0.6f);
         bg.SetBorderWidthAll(isBest ? 2 : 1);
-        bg.ContentMarginLeft = 12;
-        bg.ContentMarginRight = 12;
-        bg.ContentMarginTop = 4;
-        bg.ContentMarginBottom = 4;
+        bg.ContentMarginLeft = ScaledMargin(12, s);
+        bg.ContentMarginRight = ScaledMargin(12, s);
+        bg.ContentMarginTop = ScaledMargin(4, s);
+        bg.ContentMarginBottom = ScaledMargin(4, s);
         bg.SetCornerRadiusAll(4);
         panel.AddThemeStyleboxOverride("panel", bg);
 
@@ -223,7 +234,7 @@ public sealed class ScoreOverlay
         var bestMark = isBest ? " ★" : "";
         label.Text = $"{scoreText}{bestMark}";
         label.AddThemeColorOverride("font_color", scoreColor);
-        label.AddThemeFontSizeOverride("font_size", 18);
+        label.AddThemeFontSizeOverride("font_size", ScaledFont(18, s));
         label.HorizontalAlignment = HorizontalAlignment.Center;
         panel.AddChild(label);
 
@@ -240,6 +251,7 @@ public sealed class ScoreOverlay
     {
         HideTooltip();
 
+        var s = TooltipScale;
         _tooltip = new PanelContainer();
         _tooltip.MouseFilter = Control.MouseFilterEnum.Ignore;
 
@@ -247,35 +259,35 @@ public sealed class ScoreOverlay
         bg.BgColor = new Color(0.02f, 0.02f, 0.06f, 0.95f);
         bg.BorderColor = new Color(0.5f, 0.45f, 0.3f);
         bg.SetBorderWidthAll(1);
-        bg.ContentMarginLeft = 10;
-        bg.ContentMarginRight = 10;
-        bg.ContentMarginTop = 8;
-        bg.ContentMarginBottom = 8;
+        bg.ContentMarginLeft = ScaledMargin(10, s);
+        bg.ContentMarginRight = ScaledMargin(10, s);
+        bg.ContentMarginTop = ScaledMargin(8, s);
+        bg.ContentMarginBottom = ScaledMargin(8, s);
         bg.SetCornerRadiusAll(4);
         _tooltip.AddThemeStyleboxOverride("panel", bg);
 
         var vbox = new VBoxContainer();
-        vbox.AddThemeConstantOverride("separation", 3);
+        vbox.AddThemeConstantOverride("separation", ScaledMargin(3, s));
         _tooltip.AddChild(vbox);
 
         var title = new Label();
         title.Text = FormatCardId(rec.CardId);
         title.AddThemeColorOverride("font_color", new Color(0.9f, 0.85f, 0.7f));
-        title.AddThemeFontSizeOverride("font_size", 14);
+        title.AddThemeFontSizeOverride("font_size", ScaledFont(14, s));
         vbox.AddChild(title);
 
-        AddScoreRow(vbox, "Baseline", rec.Baseline.Score);
-        AddScoreRow(vbox, "Archetype", rec.Archetype.Score);
-        AddScoreRow(vbox, "Synergy", rec.Synergy.Score);
-        AddScoreRow(vbox, "Copies", rec.CountAdjust.Score);
-        AddScoreRow(vbox, "Upgrade", rec.Upgrade.Score);
+        AddScoreRow(vbox, "Baseline", rec.Baseline.Score, s);
+        AddScoreRow(vbox, "Archetype", rec.Archetype.Score, s);
+        AddScoreRow(vbox, "Synergy", rec.Synergy.Score, s);
+        AddScoreRow(vbox, "Copies", rec.CountAdjust.Score, s);
+        AddScoreRow(vbox, "Upgrade", rec.Upgrade.Score, s);
 
         if (rec.Archetype.MatchedArchetype != null)
         {
             var archLabel = new Label();
             archLabel.Text = $"Archetype: {rec.Archetype.MatchedArchetype}";
             archLabel.AddThemeColorOverride("font_color", new Color(0.5f, 0.5f, 0.55f));
-            archLabel.AddThemeFontSizeOverride("font_size", 10);
+            archLabel.AddThemeFontSizeOverride("font_size", ScaledFont(10, s));
             vbox.AddChild(archLabel);
         }
 
@@ -284,7 +296,7 @@ public sealed class ScoreOverlay
             var noteLabel = new Label();
             noteLabel.Text = rec.CountAdjust.Note;
             noteLabel.AddThemeColorOverride("font_color", new Color(0.5f, 0.5f, 0.55f));
-            noteLabel.AddThemeFontSizeOverride("font_size", 10);
+            noteLabel.AddThemeFontSizeOverride("font_size", ScaledFont(10, s));
             vbox.AddChild(noteLabel);
         }
 
@@ -293,7 +305,7 @@ public sealed class ScoreOverlay
         if (cardHolder != null)
         {
             cardHolder.AddChild(_tooltip);
-            _tooltip.Position = anchor.Position + new Vector2(-20, -170);
+            _tooltip.Position = anchor.Position + ScaledVec(new Vector2(-20, -170), s);
             _nodes.Add(_tooltip);
         }
     }
@@ -309,22 +321,22 @@ public sealed class ScoreOverlay
         _tooltip = null;
     }
 
-    private static void AddScoreRow(VBoxContainer parent, string name, double score)
+    private static void AddScoreRow(VBoxContainer parent, string name, double score, float scale = 1.0f)
     {
         var hbox = new HBoxContainer();
-        hbox.AddThemeConstantOverride("separation", 6);
+        hbox.AddThemeConstantOverride("separation", ScaledMargin(6, scale));
 
         var nameLabel = new Label();
         nameLabel.Text = name;
         nameLabel.AddThemeColorOverride("font_color", new Color(0.7f, 0.7f, 0.75f));
-        nameLabel.AddThemeFontSizeOverride("font_size", 12);
-        nameLabel.CustomMinimumSize = new Vector2(70, 0);
+        nameLabel.AddThemeFontSizeOverride("font_size", ScaledFont(12, scale));
+        nameLabel.CustomMinimumSize = ScaledVec(new Vector2(70, 0), scale);
         hbox.AddChild(nameLabel);
 
         var scoreLabel = new Label();
         scoreLabel.Text = $"{score:F1}";
         scoreLabel.AddThemeColorOverride("font_color", GetScoreColor(score));
-        scoreLabel.AddThemeFontSizeOverride("font_size", 12);
+        scoreLabel.AddThemeFontSizeOverride("font_size", ScaledFont(12, scale));
         hbox.AddChild(scoreLabel);
 
         parent.AddChild(hbox);
@@ -346,6 +358,7 @@ public sealed class ScoreOverlay
 
     public PanelContainer CreateShopBadge(string text, Color color)
     {
+        var s = BadgeScale;
         var panel = new PanelContainer();
         panel.MouseFilter = Control.MouseFilterEnum.Ignore;
 
@@ -353,17 +366,17 @@ public sealed class ScoreOverlay
         bg.BgColor = new Color(0.03f, 0.03f, 0.08f, 0.85f);
         bg.BorderColor = new Color(0.4f, 0.4f, 0.5f, 0.5f);
         bg.SetBorderWidthAll(1);
-        bg.ContentMarginLeft = 6;
-        bg.ContentMarginRight = 6;
-        bg.ContentMarginTop = 2;
-        bg.ContentMarginBottom = 2;
+        bg.ContentMarginLeft = ScaledMargin(6, s);
+        bg.ContentMarginRight = ScaledMargin(6, s);
+        bg.ContentMarginTop = ScaledMargin(2, s);
+        bg.ContentMarginBottom = ScaledMargin(2, s);
         bg.SetCornerRadiusAll(3);
         panel.AddThemeStyleboxOverride("panel", bg);
 
         var label = new Label();
         label.Text = text;
         label.AddThemeColorOverride("font_color", color);
-        label.AddThemeFontSizeOverride("font_size", 16);
+        label.AddThemeFontSizeOverride("font_size", ScaledFont(16, s));
         label.HorizontalAlignment = HorizontalAlignment.Center;
         panel.AddChild(label);
 
