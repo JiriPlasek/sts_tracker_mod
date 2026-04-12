@@ -50,6 +50,7 @@ public static class CardScoreHelper
                 .Select(c => "CARD." + c.Id.Entry)
                 .ToArray();
 
+            var proMode = ModConfigBridge.GetValue("proMode", Plugin.CurrentConfig?.ProMode ?? false);
             var request = new RecommendRequest
             {
                 Character = characterId,
@@ -57,7 +58,8 @@ public static class CardScoreHelper
                 Candidates = candidateIds,
                 CandidateUpgrades = candidateUpgrades,
                 Floor = floor,
-                Ascension = ascension
+                Ascension = ascension,
+                ProMode = proMode
             };
 
             Plugin.Log($"Card selection opened! Character={characterId} Floor={floor} Candidates={string.Join(", ", candidateIds)}");

@@ -21,6 +21,9 @@ public sealed class Config
     [JsonPropertyName("syncActiveRun")]
     public bool SyncActiveRun { get; set; } = true;
 
+    [JsonPropertyName("proMode")]
+    public bool ProMode { get; set; } = false;
+
     [JsonPropertyName("badgeScale")]
     public float BadgeScale { get; set; } = 1.0f;
 

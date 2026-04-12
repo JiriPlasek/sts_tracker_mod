@@ -203,6 +203,19 @@ internal static class ModConfigBridge
             }));
         }));
 
+        list.Add(Entry(e =>
+        {
+            Set(e, "Key", "proMode");
+            Set(e, "Label", "Pro Mode");
+            Set(e, "Description", "Use card recommendations from high-winrate A10+ players only");
+            Set(e, "Type", EnumVal("Toggle"));
+            Set(e, "DefaultValue", (object)cfg.ProMode);
+            Set(e, "OnChanged", new Action<object>(v =>
+            {
+                cfg.ProMode = Convert.ToBoolean(v);
+            }));
+        }));
+
         list.Add(Entry(e => Set(e, "Type", EnumVal("Separator"))));
 
         // ─── Appearance ─────────────────────────────────────────
