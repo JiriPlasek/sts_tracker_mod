@@ -22,6 +22,9 @@ public sealed class RecommendRequest
     [JsonPropertyName("ascension")]
     public int Ascension { get; set; }
 
+    [JsonPropertyName("deckFloors")]
+    public int[]? DeckFloors { get; set; }
+
     [JsonPropertyName("proMode")]
     public bool ProMode { get; set; }
 }

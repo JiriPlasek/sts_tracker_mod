@@ -276,19 +276,18 @@ public sealed class ScoreOverlay
         title.AddThemeFontSizeOverride("font_size", ScaledFont(14, s));
         vbox.AddChild(title);
 
-        AddScoreRow(vbox, "Baseline", rec.Baseline.Score, s);
-        AddScoreRow(vbox, "Archetype", rec.Archetype.Score, s);
+        AddScoreRow(vbox, "Score", rec.PowerScore.Score, s);
         AddScoreRow(vbox, "Synergy", rec.Synergy.Score, s);
         AddScoreRow(vbox, "Copies", rec.CountAdjust.Score, s);
         AddScoreRow(vbox, "Upgrade", rec.Upgrade.Score, s);
 
-        if (rec.Archetype.MatchedArchetype != null)
+        if (rec.PowerScore.Tier != null)
         {
-            var archLabel = new Label();
-            archLabel.Text = $"Archetype: {rec.Archetype.MatchedArchetype}";
-            archLabel.AddThemeColorOverride("font_color", new Color(0.5f, 0.5f, 0.55f));
-            archLabel.AddThemeFontSizeOverride("font_size", ScaledFont(10, s));
-            vbox.AddChild(archLabel);
+            var tierLabel = new Label();
+            tierLabel.Text = $"{rec.PowerScore.Tier}-tier ({rec.PowerScore.Raw:F0}/100)";
+            tierLabel.AddThemeColorOverride("font_color", new Color(0.5f, 0.5f, 0.55f));
+            tierLabel.AddThemeFontSizeOverride("font_size", ScaledFont(10, s));
+            vbox.AddChild(tierLabel);
         }
 
         if (rec.CountAdjust.Note != null)

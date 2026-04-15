@@ -19,11 +19,8 @@ public sealed class Recommendation
     [JsonPropertyName("hasData")]
     public bool HasData { get; set; }
 
-    [JsonPropertyName("baseline")]
-    public BaselineScore Baseline { get; set; } = new();
-
-    [JsonPropertyName("archetype")]
-    public ArchetypeScore Archetype { get; set; } = new();
+    [JsonPropertyName("powerScore")]
+    public PowerScoreComponent PowerScore { get; set; } = new();
 
     [JsonPropertyName("synergy")]
     public SynergyScore Synergy { get; set; } = new();
@@ -35,31 +32,16 @@ public sealed class Recommendation
     public UpgradeScore Upgrade { get; set; } = new();
 }
 
-public sealed class BaselineScore
+public sealed class PowerScoreComponent
 {
     [JsonPropertyName("score")]
     public double Score { get; set; }
 
-    [JsonPropertyName("winDelta")]
-    public double WinDelta { get; set; }
+    [JsonPropertyName("raw")]
+    public double? Raw { get; set; }
 
-    [JsonPropertyName("pickRate")]
-    public double PickRate { get; set; }
-
-    [JsonPropertyName("timingScore")]
-    public double TimingScore { get; set; }
-}
-
-public sealed class ArchetypeScore
-{
-    [JsonPropertyName("score")]
-    public double Score { get; set; }
-
-    [JsonPropertyName("matchedArchetype")]
-    public string? MatchedArchetype { get; set; }
-
-    [JsonPropertyName("archetypeWinRate")]
-    public double? ArchetypeWinRate { get; set; }
+    [JsonPropertyName("tier")]
+    public string? Tier { get; set; }
 }
 
 public sealed class SynergyScore

@@ -46,15 +46,16 @@ public static class CardScoreHelper
             var floor = runState.TotalFloor;
             var ascension = runState.AscensionLevel;
 
-            var deck = player.Deck.Cards
-                .Select(c => "CARD." + c.Id.Entry)
-                .ToArray();
+            var deckCards = player.Deck.Cards.ToArray();
+            var deck = deckCards.Select(c => "CARD." + c.Id.Entry).ToArray();
+            var deckFloors = deckCards.Select(c => c.FloorAddedToDeck ?? 0).ToArray();
 
             var proMode = ModConfigBridge.GetValue("proMode", Plugin.CurrentConfig?.ProMode ?? false);
             var request = new RecommendRequest
             {
                 Character = characterId,
                 Deck = deck,
+                DeckFloors = deckFloors,
                 Candidates = candidateIds,
                 CandidateUpgrades = candidateUpgrades,
                 Floor = floor,
